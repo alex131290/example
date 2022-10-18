@@ -19,7 +19,7 @@ build:
 	docker build --build-arg VERSION=${VERSION} -t ${SERVICE_NAME}:latest -t ${SERVICE_NAME}:${VERSION} .
 
 test: build
-	./scripts/test.sh
+	./scripts/test.sh --service-image ${SERVICE_NAME}:${VERSION}
 
 clean:
 	docker rmi -f ${SERVICE_NAME}:latest ${SERVICE_NAME}:${VERSION}

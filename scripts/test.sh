@@ -23,13 +23,64 @@ usage() {
     echo "      -h|--help - display this help."
     echo "      -v|--verbose - set verbosity"
     echo "      --expected-version - expected version, optional. Default is the current version."
+    echo "      --service-image - The image to test, mandatory"
     echo ""
 }
 
-test() {
-    echo "Not Implemented"
-    exit 1
+VERBOSE=false
+TEST_STATUS="fail"
+
+_set_args() {
+    while :
+    do
+        case "$1" in
+            -v | --verbose ) 
+                VERBOSE=true;
+                shift;
+                ;;
+            --expected-version ) 
+                EXPECTED_VERSION="$2"
+                shift 2;
+                ;;
+            --service-image ) 
+                SERVICE_IMAGE="$2"
+                shift 2;
+                ;;
+            -h| --help ) 
+                usage
+                exit 0
+                ;;
+            * )
+                shift;
+                break
+                ;;
+        esac
+    done
 }
 
-# TODO add options support
+test() {
+    _set_args $@
+    if [ -z "$SERVICE_IMAGE" ]; then
+        usage
+        exit 1
+    fi
+    echo "SERVICE_IMAGE=$SERVICE_IMAGE"
+    EXAMPLE_IMG="$SERVICE_IMAGE" docker-compose up -d
+    health_out=$(curl -s http://localhost:8080/health)
+    version=$(echo "$health_out" | grep -o '"version":"[^"]*' | grep -o '[^"]*$')
+    status=$(echo "$health_out" | grep -o '"status":"[^"]*' | grep -o '[^"]*$')
+    echo "version is $version status is $status"
+    echo "health_out=$health_out"
+    if [ "$status" == "OK" ] && [[ ${version} != *"dirty"* ]]; then
+        echo "Service is healthy"
+    else
+        echo "Service is unhealthy"
+        TEST_STATUS="fail"
+    fi
+    docker-compose down
+    if [[ "$TEST_STATUS" == "fail" ]]; then
+        exit 1
+    fi
+}
+
 test $@

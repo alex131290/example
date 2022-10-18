@@ -37,26 +37,88 @@ usage() {
     echo "      --dirty-only - print only the dirty suffix if the repo is dirty"
     echo "      --long-revision - use long revision SHA1 instead of the default which is short"
     echo ""
+    exit 1
+}
+LONG_REV=false
+SEMVER_ONLY=false
+REV_ONLY=false
+DIRTY_ONLY=false
+
+_set_args() {
+    while :
+    do
+        case "$1" in
+            -v | --verbose ) 
+                VERBOSE=true;
+                shift;
+                ;;
+            --semver-only ) 
+                SEMVER_ONLY=true
+                shift;
+                break
+                ;;
+            --revision-only ) 
+                REV_ONLY=true
+                shift;
+                ;;
+            --dirty-only ) 
+                DIRTY_ONLY=true
+                shift;
+                break
+                ;;
+            --long-revision ) 
+                LONG_REV=true;
+                shift;
+                ;;
+            -h| --help ) 
+                usage
+                ;;
+            * )
+                shift;
+                break
+                ;;
+        esac
+    done
 }
 
+
+SOURCE_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+VERSION_FILE="${SOURCE_DIR}/../VERSION"
+GIT_DIR="${SOURCE_DIR}/../.git"
+
+
+
 semver() {
-    # TODO
-    echo "NA"
+    version_from_file=$(cat ${VERSION_FILE})
+    echo "${version_from_file}"
 }
 
 revision() {
-    # TODO
-    echo "NA"
+    if [ $# > 0 ] && [ "$1" = "true" ]; then
+        commit_sha=$(git --git-dir="${GIT_DIR}" rev-parse HEAD)
+    else
+        commit_sha=$(git --git-dir="${GIT_DIR}" rev-parse --short HEAD)
+    fi
+    echo "${commit_sha}"
 }
 
 dirty() {
-    # TODO
-    echo "-unknown"
+    if output=$(git --git-dir="${GIT_DIR}" status --porcelain) && [ ! -z "$output" ]; then
+        echo "-dirty"
+    fi
 }
 
 version() {
-    echo "$(semver)_rev-$(revision)$(dirty)"
+    _set_args $@
+    if [[ "${SEMVER_ONLY}" == "true" ]]; then
+        echo "$(semver)"
+    elif [[ "${REV_ONLY}" = "true" ]]; then
+        echo "$(revision $LONG_REV)"
+    elif [[ "${DIRTY_ONLY}" = "true" ]]; then
+        echo "$(dirty)"
+    else
+        echo "$(semver)_rev-$(revision $LONG_REV)$(dirty)"
+    fi    
 }
 
-# TODO add options support
 version $@
