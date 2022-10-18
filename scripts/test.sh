@@ -73,9 +73,9 @@ test() {
     echo "health_out=$health_out"
     if [ "$status" == "OK" ] && [[ ${version} != *"dirty"* ]]; then
         echo "Service is healthy"
+        TEST_STATUS="pass"
     else
         echo "Service is unhealthy"
-        TEST_STATUS="fail"
     fi
     docker-compose down
     if [[ "$TEST_STATUS" == "fail" ]]; then
