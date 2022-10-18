@@ -39,35 +39,35 @@ usage() {
     echo ""
     exit 1
 }
-LONG_REV=false
-SEMVER_ONLY=false
-REV_ONLY=false
-DIRTY_ONLY=false
+LONG_REV="false"
+SEMVER_ONLY="false"
+REV_ONLY="false"
+DIRTY_ONLY="false"
 
 _set_args() {
     while :
     do
         case "$1" in
             -v | --verbose ) 
-                VERBOSE=true;
+                VERBOSE="true";
                 shift;
                 ;;
             --semver-only ) 
-                SEMVER_ONLY=true
+                SEMVER_ONLY="true"
                 shift;
                 break
                 ;;
             --revision-only ) 
-                REV_ONLY=true
+                REV_ONLY="true"
                 shift;
                 ;;
             --dirty-only ) 
-                DIRTY_ONLY=true
+                DIRTY_ONLY="true"
                 shift;
                 break
                 ;;
             --long-revision ) 
-                LONG_REV=true;
+                LONG_REV="true";
                 shift;
                 ;;
             -h| --help ) 
@@ -94,7 +94,7 @@ semver() {
 }
 
 revision() {
-    if [ $# > 0 ] && [ "$1" = "true" ]; then
+    if [[ $# > 0 ]] && [[ "$1" = "true" ]]; then
         commit_sha=$(git --git-dir="${GIT_DIR}" rev-parse HEAD)
     else
         commit_sha=$(git --git-dir="${GIT_DIR}" rev-parse --short HEAD)
